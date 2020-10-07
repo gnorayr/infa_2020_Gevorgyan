@@ -1,11 +1,12 @@
 import pygame
 from pygame.draw import *
 from random import randint
+from math import pi, sin, cos
 
 pygame.init()
 
 FPS = 1
-screen = pygame.display.set_mode((1200, 900))
+screen = pygame.display.set_mode((1200, 600))
 
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
@@ -18,13 +19,15 @@ COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
 
 def new_ball():
-    '''draws a new ball'''
-    global x, y, r
+    """draws a new ball"""
+    global x, y, r, a
+
+    a = randint(0, int(2 * pi * 100))
     x = randint(100, 1100)
-    y = randint(100, 800)
-    r = randint(50, 70)
+    y = randint(100, 500)
+    r = randint(25, 35)
     color = COLORS[randint(0, 5)]
-    ellipse(screen, color, (x - r, y - r, r, r))
+    ellipse(screen, color, (x - r, y - r, 2 * r, 2 * r))
 
 
 pygame.display.update()
@@ -44,14 +47,24 @@ while not finished:
     new_ball()
     pygame.display.update()
 
-    t = 1
+    v = 1
+    v_x = v * cos(a / 100)
+    v_y = v * sin(a / 100)
     for i in range(1000):
         screen.fill(BLACK)
-        if x <= 0:
-            t = - abs(t)
+        if x - r <= 0:
+            v_x = abs(v_x)
+        if y - r <= 0:
+            v_y = abs(v_y)
+        if x + r >= 1200:
+            v_x = -abs(v_x)
+        if y + r >= 600:
+            v_y = -abs(v_y)
 
-        ellipse(screen, (255, 255, 255), (x, y, r, r))
-        x -= t
+        ellipse(screen, (255, 255, 255), (x - r, y - r, 2 * r, 2 * r))
+        x += v_x
+        y += v_y
+
         pygame.display.update()
     screen.fill(BLACK)
 pygame.quit()
