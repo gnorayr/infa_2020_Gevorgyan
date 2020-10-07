@@ -26,8 +26,26 @@ def new_ball():
     x = randint(100, 1100)
     y = randint(100, 500)
     r = randint(25, 35)
+    v = 1
+    v_x = v * cos(a / 100)
+    v_y = v * sin(a / 100)
     color = COLORS[randint(0, 5)]
-    ellipse(screen, color, (x - r, y - r, 2 * r, 2 * r))
+    for i in range(1000):
+        screen.fill(BLACK)
+        if x - r <= 0:
+            v_x = abs(v_x)
+        if y - r <= 0:
+            v_y = abs(v_y)
+        if x + r >= 1200:
+            v_x = -abs(v_x)
+        if y + r >= 600:
+            v_y = -abs(v_y)
+
+        ellipse(screen, color, (x - r, y - r, 2 * r, 2 * r))
+        x += v_x
+        y += v_y
+        pygame.display.update()
+
 
 
 pygame.display.update()
@@ -47,24 +65,8 @@ while not finished:
     new_ball()
     pygame.display.update()
 
-    v = 1
-    v_x = v * cos(a / 100)
-    v_y = v * sin(a / 100)
-    for i in range(1000):
-        screen.fill(BLACK)
-        if x - r <= 0:
-            v_x = abs(v_x)
-        if y - r <= 0:
-            v_y = abs(v_y)
-        if x + r >= 1200:
-            v_x = -abs(v_x)
-        if y + r >= 600:
-            v_y = -abs(v_y)
 
-        ellipse(screen, (255, 255, 255), (x - r, y - r, 2 * r, 2 * r))
-        x += v_x
-        y += v_y
 
-        pygame.display.update()
+
     screen.fill(BLACK)
 pygame.quit()
