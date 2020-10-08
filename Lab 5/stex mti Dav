@@ -1,0 +1,72 @@
+import pygame
+from pygame.draw import *
+from random import randint
+from math import pi, sin, cos
+
+pygame.init()
+
+FPS = 1000
+screen = pygame.display.set_mode((1200, 600))
+
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
+MAGENTA = (255, 0, 255)
+CYAN = (0, 255, 255)
+BLACK = (0, 0, 0)
+COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+number = 20
+
+v = 1
+r = 10
+N = range(number)
+X = [randint(100, 1100) for i in N]
+Y = [randint(100, 500) for i in N]
+A = [randint(0, int(2 * pi * 100)) for i in N]
+V_x = [v * cos(a / 100) for a in A]
+V_y = [v * sin(a / 100) for a in A]
+color = COLORS[randint(0, 5)]
+
+
+def new_ball():
+    """draws a new ball"""
+    screen.fill(BLACK)
+    for x, y, a, v_x, v_y, n in zip(X, Y, A, V_x, V_y, N):
+
+        if x - r <= 0:
+            V_x[n] = abs(v_x)
+        if y - r <= 0:
+            V_y[n] = abs(v_y)
+        if x + r >= 1200:
+            V_x[n] = -abs(v_x)
+        if y + r >= 600:
+            V_y[n] = -abs(v_y)
+
+        ellipse(screen, color, (x - r, y - r, 2 * r, 2 * r))
+        X[n] += v_x
+        Y[n] += v_y
+
+
+pygame.display.update()
+
+pygame.display.update()
+clock = pygame.time.Clock()
+finished = False
+
+while not finished:
+    clock.tick(FPS)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            finished = True
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            A, B = pygame.mouse.get_pos()
+            for n in N:
+                if (A - X[n]) ** 2 + (B - Y[n]) ** 2 < r ** 2:
+                    print("AYO!!!!")
+
+    new_ball()
+    pygame.display.update()
+
+    screen.fill(BLACK)
+pygame.quit()
