@@ -20,7 +20,7 @@ score = 0
 
 def new_ball():
     """draws number new balls"""
-    global X, Y, A, V_x, V_y
+    global X, Y, A, V_x, V_y, score, score_add
 
     R = [randint(0, 255) for n in N]
     G = [randint(0, 255) for n in N]
@@ -71,24 +71,6 @@ finished = False
 while not finished:
     clock.tick(FPS)
     new_ball()
-    """for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            finished = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            for n in N:
-                if (mouse_x - X[n]) ** 2 + (mouse_y - Y[n]) ** 2 <= r ** 2:
-                    score_add += 1
-                    score += score_add
-                    score_add = 0
-                    print("score =", score)
-
-        if score_add == 0:
-            pygame.quit()
-        else:
-            score += score_add
-            score_add = 0
-            print("score =", score)"""
 
     pygame.display.update()
 
