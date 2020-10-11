@@ -4,6 +4,13 @@ from random import randint
 from math import pi, sin, cos
 
 pygame.init()
+"""
+    screen_x, screen_y - horizontal and vertacal size of the screen
+    number - number of balls
+    v - full velocity
+    r = radius of balls
+    score - player's score
+"""
 
 screen_x = 1200
 screen_y = 600
@@ -12,13 +19,12 @@ screen = pygame.display.set_mode((screen_x, screen_y))
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-number = 2
-v = 1.5
-r = 70
-N = range(number)
 score = 0
 score_2 = 0
-
+number = 2
+N = range(number)
+v = 2
+r = 70
 
 def show_score():
     """Draws player's score in top left corner of screen"""
@@ -28,7 +34,11 @@ def show_score():
 
 
 def new_ball():
-    """draws number new balls"""
+    """draws number new balls
+       a - angle
+       x, y - coordinates
+       v_x, v_y - horizontal and vertical velocity
+    """
     global X, Y, A, V_x, V_y, score, score_2
 
     R = [randint(0, 255) for n in N]
