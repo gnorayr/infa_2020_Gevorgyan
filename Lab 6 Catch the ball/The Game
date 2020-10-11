@@ -13,12 +13,18 @@ screen = pygame.display.set_mode((screen_x, screen_y))
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 number = 2
-
 v = 1.5
 r = 70
 N = range(number)
 score = 0
 score_2 = 0
+
+
+def show_score():
+    """Draws player's score in top left corner of screen"""
+    font = pygame.font.SysFont('arial', 25, True)
+    text = font.render("Score: {}".format(score), True, WHITE)
+    screen.blit(text, text.get_rect())
 
 
 def new_ball():
@@ -63,9 +69,10 @@ def new_ball():
                             A[n] = 0
                             print("score -", score)
 
-
         pygame.display.update()
         screen.fill(BLACK)
+
+        show_score()
 
     if score_2 - score >= 1:
         pygame.quit()
