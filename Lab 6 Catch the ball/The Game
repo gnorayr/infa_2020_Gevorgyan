@@ -5,7 +5,7 @@ from math import pi, sin, cos
 
 pygame.init()
 """
-    screen_x, screen_y - horizontal and vertacal size of the screen
+    screen_x, screen_y - horizontal and vertical size of the screen
     number - number of balls
     v - full velocity
     r = radius of balls
@@ -23,8 +23,9 @@ score = 0
 score_2 = 0
 number = 2
 N = range(number)
-v = 2
+v = 2.5
 r = 70
+
 
 def show_score():
     """Draws player's score in top left corner of screen"""
@@ -76,7 +77,7 @@ def new_ball():
                         if (mouse_x - X[n]) ** 2 + (mouse_y - Y[n]) ** 2 <= r ** 2:
                             score += 1
                             X[n], Y[n] = 2 * screen_x, 2 * screen_y
-                            A[n] = 0
+                            V_x[n], V_y[n] = 0, 0
                             print("score -", score)
 
         pygame.display.update()
@@ -84,7 +85,7 @@ def new_ball():
 
         show_score()
 
-    if score_2 - score >= 1:
+    if score_2 - score > 0:
         pygame.quit()
 
 
