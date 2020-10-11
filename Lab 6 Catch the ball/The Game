@@ -30,9 +30,8 @@ def new_ball():
     A = [randint(0, int(2 * pi * 100)) for i in N]
     V_x = [v * cos(a / 100) for a in A]
     V_y = [v * sin(a / 100) for a in A]
-
+    score_add += 1
     for i in range(1000):
-        screen.fill(BLACK)
         for x, y, a, v_x, v_y, n, red, green, blue in zip(X, Y, A, V_x, V_y, N, R, G, B):
 
             if x - r <= 0:
@@ -47,24 +46,26 @@ def new_ball():
             ellipse(screen, (red, green, blue), (x - r, y - r, 2 * r, 2 * r))
             X[n] += v_x
             Y[n] += v_y
+
             for event in pygame.event.get():
+
                 if event.type == pygame.QUIT:
                     finished = True
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     for n in N:
                         if (mouse_x - X[n]) ** 2 + (mouse_y - Y[n]) ** 2 <= r ** 2:
-                            score_add += 1
-                    if score_add == 0:
-                        pygame.quit()
-                    else:
-                        score += score_add
-                        score_add = 0
-                        print("score =", score)
+                            score += 1
+                            score_add = score
+                            print("score =", score)
         pygame.display.update()
+        screen.fill(BLACK)
+    if score_add - score >= 1:
+        pygame.quit()
 
 
-pygame.display.update()
+
+
 clock = pygame.time.Clock()
 finished = False
 
@@ -72,7 +73,4 @@ while not finished:
     clock.tick(FPS)
     new_ball()
 
-    pygame.display.update()
-
-    screen.fill(BLACK)
 pygame.quit()
