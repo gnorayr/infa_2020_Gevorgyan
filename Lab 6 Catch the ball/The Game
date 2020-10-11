@@ -8,19 +8,20 @@ pygame.init()
 FPS = 1
 screen = pygame.display.set_mode((1200, 600))
 
+WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 number = 2
 
-v = 1
+v = 0
 r = 70
 N = range(number)
-score_add = 0
 score = 0
+score_2 = 0
 
 
 def new_ball():
     """draws number new balls"""
-    global X, Y, A, V_x, V_y, score, score_add
+    global X, Y, A, V_x, V_y, score, score_2
 
     R = [randint(0, 255) for n in N]
     G = [randint(0, 255) for n in N]
@@ -30,7 +31,7 @@ def new_ball():
     A = [randint(0, int(2 * pi * 100)) for i in N]
     V_x = [v * cos(a / 100) for a in A]
     V_y = [v * sin(a / 100) for a in A]
-    score_add += 1
+    score_2 += 1
     for i in range(1000):
         for x, y, a, v_x, v_y, n, red, green, blue in zip(X, Y, A, V_x, V_y, N, R, G, B):
 
@@ -56,14 +57,17 @@ def new_ball():
                     for n in N:
                         if (mouse_x - X[n]) ** 2 + (mouse_y - Y[n]) ** 2 <= r ** 2:
                             score += 1
-                            score_add = score
-                            print("score =", score)
+                            if score - score_2 <= n:
+                                print("score -", score)
+                                score_2 = score
+                            else:
+                                print("score -", score - score_2)
+                                score_2 = score
+
         pygame.display.update()
         screen.fill(BLACK)
-    if score_add - score >= 1:
+    if score_2 - score >= 1:
         pygame.quit()
-
-
 
 
 clock = pygame.time.Clock()
