@@ -28,7 +28,7 @@ r = 70
 
 
 def show_score():
-    """Draws player's score in top left corner of screen"""
+    """Draws player's score in top left corner of the screen"""
     font = pygame.font.SysFont('arial', 25, True)
     text = font.render("Score: {}".format(score), True, WHITE)
     screen.blit(text, text.get_rect())
