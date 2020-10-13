@@ -27,11 +27,11 @@ number_rect = 1
 N_1 = range(number_ball)
 N_2 = range(number_ball, number_rect + number_ball)
 N = range(number_ball + number_rect)
-v = 2.5
+v = 3.5
 r = 65
 rect_x = 90
 rect_y = 30
-time = 1000
+time = 500
 
 
 def show_score():
@@ -49,9 +49,9 @@ def new_ball():
     """
     global X, Y, A, V_x, V_y, score_ball, score_rect, score_2, time
 
-    R = [randint(0, 255) for n in N]
-    G = [randint(0, 255) for n in N]
-    B = [randint(0, 255) for n in N]
+    R = [randint(40, 255) for n in N]
+    G = [randint(40, 255) for n in N]
+    B = [randint(40, 255) for n in N]
     X = [randint(100, 1100) for n in N]
     Y = [randint(100, 500) for n in N]
     A = [randint(0, int(2 * pi * 100)) for i in N]
@@ -73,40 +73,40 @@ def new_ball():
             ellipse(screen, (R[n], G[n], B[n]), (X[n] - r, Y[n] - r, 2 * r, 2 * r))
             X[n] += V_x[n]
             Y[n] += V_y[n]
-        
-        for n in N_2:
+        if i >= time:
+            for n in N_2:
 
-            if X[n] - rect_x <= 0:
-                V_x[n] = abs(V_x[n])
-            if Y[n] - rect_y <= 0:
-                V_y[n] = abs(V_y[n])
-            if X[n] + rect_x >= 1200:
-                V_x[n] = -abs(V_x[n])
-            if Y[n] + rect_y >= 600:
-                V_y[n] = -abs(V_y[n])
+                if X[n] - rect_x <= 0:
+                    V_x[n] = abs(V_x[n])
+                if Y[n] - rect_y <= 0:
+                    V_y[n] = abs(V_y[n])
+                if X[n] + rect_x >= 1200:
+                    V_x[n] = -abs(V_x[n])
+                if Y[n] + rect_y >= 600:
+                    V_y[n] = -abs(V_y[n])
 
-            rect(screen, (R[n], G[n], B[n]), (X[n] - rect_x, Y[n] - rect_y, 2 * rect_x, 2 * rect_y))
-            X[n] += V_x[n]
-            Y[n] += V_y[n]
+                rect(screen, (R[n], G[n], B[n]), (X[n] - rect_x, Y[n] - rect_y, 2 * rect_x, 2 * rect_y))
+                X[n] += V_x[n]
+                Y[n] += V_y[n]
 
-            for event in pygame.event.get():
+        for event in pygame.event.get():
 
-                if event.type == pygame.QUIT:
-                    finished = True
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_x, mouse_y = pygame.mouse.get_pos()
-                    for n in N_1:
-                        if (mouse_x - X[n]) ** 2 + (mouse_y - Y[n]) ** 2 <= r ** 2:
-                            score_ball += 1
-                            X[n], Y[n] = 2 * screen_x, 2 * screen_y
-                            V_x[n], V_y[n] = 0, 0
-                            print("score ball -", score_ball)
-                    for n in N_2:
-                        if -rect_x <= mouse_x - X[n] <= rect_x and -rect_y <= mouse_y - Y[n] <= rect_y:
-                            score_rect += 1
-                            X[n], Y[n] = 2 * screen_x, 2 * screen_y
-                            V_x[n], V_y[n] = 0, 0
-                            print("score rect -", score_rect)
+            if event.type == pygame.QUIT:
+                finished = True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                for n in N_1:
+                    if (mouse_x - X[n]) ** 2 + (mouse_y - Y[n]) ** 2 <= r ** 2:
+                        score_ball += 1
+                        X[n], Y[n] = 2 * screen_x, 2 * screen_y
+                        V_x[n], V_y[n] = 0, 0
+                        print("score ball -", score_ball)
+                for n in N_2:
+                    if -rect_x <= mouse_x - X[n] <= rect_x and -rect_y <= mouse_y - Y[n] <= rect_y:
+                        score_rect += 1
+                        X[n], Y[n] = 2 * screen_x, 2 * screen_y
+                        V_x[n], V_y[n] = 0, 0
+                        print("score rect -", score_rect)
 
         pygame.display.update()
         screen.fill(BLACK)
