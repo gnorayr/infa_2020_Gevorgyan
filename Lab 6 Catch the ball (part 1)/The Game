@@ -4,89 +4,113 @@ from random import randint
 from math import pi, sin, cos
 
 pygame.init()
-"""
-    screen_x, screen_y - horizontal and vertical size of the screen
-    number - number of balls
-    v - full velocity
-    r = radius of balls
-    score - player's score
-"""
 
-screen_x = 1200
-screen_y = 600
+screen_width = 1200
+screen_height = 600
 FPS = 1
-screen = pygame.display.set_mode((screen_x, screen_y))
+screen = pygame.display.set_mode((screen_width, screen_height))
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 score = 0
-score_2 = 0
-number = 2
-N = range(number)
-v = 2.5
-r = 70
+number_ball = 3
+number_rect = 3
+radius = 32
+rect_width = 45
+rect_height = 20
+time = 1000
+
+
+def coordinates(n, v=3):
+    cord = []
+    for i in range(n):
+        angle = randint(0, int(2 * pi * 100))
+        cord.append({
+            'x': randint(100, screen_width - 100),
+            'y': randint(100, screen_height - 100),
+            'vx': v * cos(angle / 100),
+            'vy': v * sin(angle / 100),
+            'r': randint(40, 255),
+            'g': randint(40, 255),
+            'b': randint(40, 255)
+        })
+    return cord
+
+
+def balls_movement():
+    for item in balls:
+        ellipse(screen, (item['r'], item['g'], item['b']),
+                (item['x'] - radius, item['y'] - radius, 2 * radius, 2 * radius))
+        item['x'] += item['vx']
+        item['y'] += item['vy']
+
+
+def rects_movement():
+    for item in rects:
+        rect(screen, (item['r'], item['g'], item['b']),
+             (item['x'] - rect_width, item['y'] - rect_height, 2 * rect_width, 2 * rect_height))
+        item['x'] += item['vx']
+        item['y'] += item['vy']
+
+
+def balls_ricochet():
+    for item in balls:
+        if item['x'] - radius <= 0:
+            item['vx'] = abs(item['vx'])
+        if item['y'] - radius <= 0:
+            item['vy'] = abs(item['vy'])
+        if item['x'] + radius >= screen_width:
+            item['vx'] = -abs(item['vx'])
+        if item['y'] + radius >= screen_height:
+            item['vy'] = -abs(item['vy'])
+
+
+def rects_ricochet():
+    for item in rects:
+        if item['x'] - rect_width <= 0:
+            item['vx'] = abs(item['vx'])
+        if item['y'] - rect_height <= 0:
+            item['vy'] = abs(item['vy'])
+        if item['x'] + rect_width >= screen_width:
+            item['vx'] = -abs(item['vx'])
+        if item['y'] + rect_height >= screen_height:
+            item['vy'] = -abs(item['vy'])
+
 
 
 def show_score():
     """Draws player's score in top left corner of the screen"""
     font = pygame.font.SysFont('arial', 25, True)
-    text = font.render("Score: {}".format(score), True, WHITE)
-    screen.blit(text, text.get_rect())
+    text_1 = font.render("Score : {}".format(score), True, WHITE)
+    screen.blit(text_1, (0, 0))
 
 
-def new_ball():
-    """draws number new balls
-       a - angle
-       x, y - coordinates
-       v_x, v_y - horizontal and vertical velocity
-    """
-    global X, Y, A, V_x, V_y, score, score_2
+def click():
+    global score
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    for item in balls:
+        if (mouse_x - item['x']) ** 2 + (mouse_y - item['y']) ** 2 <= radius ** 2:
+            score += 1
+            item['x'], item['y'] = 2 * screen_width, 2 * screen_height
+            item['vx'], item['vy'] = 0, 0
+            print("score -", score)
+    for item in rects:
+        if -rect_width <= mouse_x - item['x'] <= rect_width and -rect_height <= mouse_y - item['y'] <= rect_height:
+            score += 2
+            item['x'], item['y'] = 2 * screen_width, 2 * screen_height
+            item['vx'], item['vy'] = 0, 0
+            print("score -", score)
 
-    R = [randint(0, 255) for n in N]
-    G = [randint(0, 255) for n in N]
-    B = [randint(0, 255) for n in N]
-    X = [randint(100, 1100) for n in N]
-    Y = [randint(100, 500) for n in N]
-    A = [randint(0, int(2 * pi * 100)) for i in N]
-    V_x = [v * cos(a / 100) for a in A]
-    V_y = [v * sin(a / 100) for a in A]
-    score_2 += number
-    for i in range(1000):
-        for x, y, a, v_x, v_y, n, red, green, blue in zip(X, Y, A, V_x, V_y, N, R, G, B):
 
-            if x - r <= 0:
-                V_x[n] = abs(v_x)
-            if y - r <= 0:
-                V_y[n] = abs(v_y)
-            if x + r >= 1200:
-                V_x[n] = -abs(v_x)
-            if y + r >= 600:
-                V_y[n] = -abs(v_y)
+def not_main():
+    global clock, finished
 
-            ellipse(screen, (red, green, blue), (x - r, y - r, 2 * r, 2 * r))
-            X[n] += v_x
-            Y[n] += v_y
+    for event in pygame.event.get():
 
-            for event in pygame.event.get():
-
-                if event.type == pygame.QUIT:
-                    finished = True
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_x, mouse_y = pygame.mouse.get_pos()
-                    for n in N:
-                        if (mouse_x - X[n]) ** 2 + (mouse_y - Y[n]) ** 2 <= r ** 2:
-                            score += 1
-                            X[n], Y[n] = 2 * screen_x, 2 * screen_y
-                            V_x[n], V_y[n] = 0, 0
-                            print("score -", score)
-
-        pygame.display.update()
-        screen.fill(BLACK)
-
-        show_score()
-
-    if score_2 - score > 0:
-        pygame.quit()
+        if event.type == pygame.QUIT:
+            finished = True
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            click()
 
 
 clock = pygame.time.Clock()
@@ -94,6 +118,16 @@ finished = False
 
 while not finished:
     clock.tick(FPS)
-    new_ball()
+    balls = coordinates(number_ball)
+    rects = coordinates(number_rect)
+    for i in range(1000):
+        rects_movement()
+        balls_movement()
+        rects_ricochet()
+        balls_ricochet()
+        not_main()
+        show_score()
+        pygame.display.update()
+        screen.fill(BLACK)
 
 pygame.quit()
