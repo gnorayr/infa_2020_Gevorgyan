@@ -2,6 +2,8 @@ import pygame
 from pygame.draw import *
 from random import randint
 from math import pi, sin, cos
+import csv
+from time import asctime
 
 pygame.init()
 
@@ -70,14 +72,34 @@ def show_score():
     screen.blit(text_1, (0, 0))
 
 
-def achivemant():
+def dialog():
     screen.fill(BLACK)
     font = pygame.font.SysFont('arial', 32, True)
     text_1 = font.render("Your score is {}".format(score), True, WHITE)
     text_2 = font.render("Please enter your name and press enter", True, WHITE)
     screen.blit(text_1, text_1.get_rect(center=(screen_width / 2, screen_height / 3)))
     screen.blit(text_2, text_2.get_rect(center=(screen_width / 2, screen_height * 2 / 3)))
+
+
+def user_text():
+    global user_name, finished
+    font = pygame.font.SysFont('arial', 32, True)
+    text_1 = font.render(user_name, True, WHITE)
+    screen.blit(text_1, text_1.get_rect(center=(screen_width / 2, screen_height / 2)))
     pygame.display.update()
+    for events in pygame.event.get():
+        if events.type == pygame.KEYDOWN:
+            if events.key == pygame.K_BACKSPACE:
+                user_name = user_name[:-1]
+            elif events.key == pygame.K_ESCAPE:
+                finished = True
+            elif events.key == pygame.K_F1:
+                with open('Best scores.csv', 'a') as file:
+                    writer = csv.writer(file)
+                    writer.writerow([user_name, score, asctime()])
+                    finished = True
+            else:
+                user_name += events.unicode
 
 
 def click():
@@ -103,22 +125,9 @@ def time(present_time, start_time):
     return start_time
 
 
-def not_main():
-    global clock, finished
-    for event in pygame.event.get():
-
-        if event.type == pygame.QUIT:
-            while not finished:
-                for events in pygame.event.get():
-                    achivemant()
-                    if events.type == pygame.KEYDOWN:
-                        finished = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            click()
-
-
 clock = pygame.time.Clock()
 finished = False
+user_name = ""
 
 while not finished:
     screen.fill(BLACK)
@@ -128,14 +137,21 @@ while not finished:
     start_time = time(pygame.time.get_ticks(), 0)
     present_time = 0
     while (present_time - start_time) / 1000 < lap:
-        screen.fill(BLACK)
         present_time = pygame.time.get_ticks()
         rects_movement()
         balls_movement()
         ricochet(balls, radius, radius)
         ricochet(rects, rect_width, rect_height)
         show_score()
-        not_main()
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                while not finished:
+                    dialog()
+                    user_text()
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                click()
         pygame.display.update()
         screen.fill(BLACK)
 
