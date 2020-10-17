@@ -5,9 +5,8 @@ from math import pi, sin, cos
 
 pygame.init()
 
-screen_width = 1200
-screen_height = 600
-FPS = 1
+screen_width, screen_height = 1200, 600
+FPS = 50
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 WHITE = (255, 255, 255)
@@ -15,17 +14,16 @@ BLACK = (0, 0, 0)
 score = 0
 number_ball = 3
 number_rect = 3
-radius = 32
-rect_width = 45
-rect_height = 20
-time = 1000
+radius = 55
+rect_width, rect_height = 40, 25
+lap = 2.5
 
 
-def coordinates(n, v=3):
-    cord = []
+def parameters(n, v=3):
+    param = []
     for i in range(n):
         angle = randint(0, int(2 * pi * 100))
-        cord.append({
+        param.append({
             'x': randint(100, screen_width - 100),
             'y': randint(100, screen_height - 100),
             'vx': v * cos(angle / 100),
@@ -34,7 +32,7 @@ def coordinates(n, v=3):
             'g': randint(40, 255),
             'b': randint(40, 255)
         })
-    return cord
+    return param
 
 
 def balls_movement():
@@ -53,29 +51,16 @@ def rects_movement():
         item['y'] += item['vy']
 
 
-def balls_ricochet():
-    for item in balls:
-        if item['x'] - radius <= 0:
+def ricochet(list, a, b):
+    for item in list:
+        if item['x'] - a <= 0:
             item['vx'] = abs(item['vx'])
-        if item['y'] - radius <= 0:
+        if item['y'] - b <= 0:
             item['vy'] = abs(item['vy'])
-        if item['x'] + radius >= screen_width:
+        if item['x'] + a >= screen_width:
             item['vx'] = -abs(item['vx'])
-        if item['y'] + radius >= screen_height:
+        if item['y'] + b >= screen_height:
             item['vy'] = -abs(item['vy'])
-
-
-def rects_ricochet():
-    for item in rects:
-        if item['x'] - rect_width <= 0:
-            item['vx'] = abs(item['vx'])
-        if item['y'] - rect_height <= 0:
-            item['vy'] = abs(item['vy'])
-        if item['x'] + rect_width >= screen_width:
-            item['vx'] = -abs(item['vx'])
-        if item['y'] + rect_height >= screen_height:
-            item['vy'] = -abs(item['vy'])
-
 
 
 def show_score():
@@ -83,6 +68,16 @@ def show_score():
     font = pygame.font.SysFont('arial', 25, True)
     text_1 = font.render("Score : {}".format(score), True, WHITE)
     screen.blit(text_1, (0, 0))
+
+
+def achivemant():
+    screen.fill(BLACK)
+    font = pygame.font.SysFont('arial', 32, True)
+    text_1 = font.render("Your score is {}".format(score), True, WHITE)
+    text_2 = font.render("Please enter your name and press enter", True, WHITE)
+    screen.blit(text_1, text_1.get_rect(center=(screen_width / 2, screen_height / 3)))
+    screen.blit(text_2, text_2.get_rect(center=(screen_width / 2, screen_height * 2 / 3)))
+    pygame.display.update()
 
 
 def click():
@@ -102,13 +97,22 @@ def click():
             print("score -", score)
 
 
+def time(present_time, start_time):
+    if present_time - start_time >= lap:
+        start_time = present_time
+    return start_time
+
+
 def not_main():
     global clock, finished
-
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
-            finished = True
+            while not finished:
+                for events in pygame.event.get():
+                    achivemant()
+                    if events.type == pygame.KEYDOWN:
+                        finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             click()
 
@@ -117,16 +121,21 @@ clock = pygame.time.Clock()
 finished = False
 
 while not finished:
+    screen.fill(BLACK)
     clock.tick(FPS)
-    balls = coordinates(number_ball)
-    rects = coordinates(number_rect)
-    for i in range(1000):
+    balls = parameters(number_ball)
+    rects = parameters(number_rect)
+    start_time = time(pygame.time.get_ticks(), 0)
+    present_time = 0
+    while (present_time - start_time) / 1000 < lap:
+        screen.fill(BLACK)
+        present_time = pygame.time.get_ticks()
         rects_movement()
         balls_movement()
-        rects_ricochet()
-        balls_ricochet()
-        not_main()
+        ricochet(balls, radius, radius)
+        ricochet(rects, rect_width, rect_height)
         show_score()
+        not_main()
         pygame.display.update()
         screen.fill(BLACK)
 
