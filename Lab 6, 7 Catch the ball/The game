@@ -53,15 +53,15 @@ def rects_movement():
         item['y'] += item['vy']
 
 
-def ricochet(list, a, b):
-    for item in list:
-        if item['x'] - a <= 0:
+def ricochet(param, w, h):
+    for item in param:
+        if item['x'] - w <= 0:
             item['vx'] = abs(item['vx'])
-        if item['y'] - b <= 0:
+        if item['y'] - h <= 0:
             item['vy'] = abs(item['vy'])
-        if item['x'] + a >= screen_width:
+        if item['x'] + w >= screen_width:
             item['vx'] = -abs(item['vx'])
-        if item['y'] + b >= screen_height:
+        if item['y'] + h >= screen_height:
             item['vy'] = -abs(item['vy'])
 
 
@@ -76,7 +76,7 @@ def dialog():
     screen.fill(BLACK)
     font = pygame.font.SysFont('arial', 32, True)
     text_1 = font.render("Your score is {}".format(score), True, WHITE)
-    text_2 = font.render("Please enter your name and press enter", True, WHITE)
+    text_2 = font.render("Please enter your name and press F1", True, WHITE)
     screen.blit(text_1, text_1.get_rect(center=(screen_width / 2, screen_height / 3)))
     screen.blit(text_2, text_2.get_rect(center=(screen_width / 2, screen_height * 2 / 3)))
 
@@ -94,10 +94,11 @@ def user_text():
             elif events.key == pygame.K_ESCAPE:
                 finished = True
             elif events.key == pygame.K_F1:
-                with open('Best scores.csv', 'a') as file:
-                    writer = csv.writer(file)
-                    writer.writerow([user_name, score, asctime()])
-                    finished = True
+                if user_name != "":
+                    with open('Best scores.csv', 'a') as file:
+                        writer = csv.writer(file)
+                        writer.writerow([user_name, score, asctime()])
+                finished = True
             else:
                 user_name += events.unicode
 
@@ -119,10 +120,10 @@ def click():
             print("score -", score)
 
 
-def time(present_time, start_time):
-    if present_time - start_time >= lap:
-        start_time = present_time
-    return start_time
+def time(present_t, start_t):
+    if present_t - start_t >= lap:
+        start_t = present_t
+    return start_t
 
 
 clock = pygame.time.Clock()
