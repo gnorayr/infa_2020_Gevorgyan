@@ -10,6 +10,10 @@ screen_x, screen_y = 800, 600
 screen = pygame.display.set_mode((screen_x, screen_y))
 
 
+class Timer:
+    pass
+
+
 class Cannon:
     def __init__(self, start_side, side, color=BLACK, cord_x=screen_x // 30, cord_y=9 * screen_y // 10, width=7):
         self.color = color
