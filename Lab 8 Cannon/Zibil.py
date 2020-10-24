@@ -2,12 +2,10 @@ import pygame
 from pygame.draw import *
 from random import randint as ran, choice
 from math import pi, sin, cos, atan
+from my_colors import *
 
 pygame.init()
 FPS = 60
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-BLACK = (0, 0, 0)
 screen_x, screen_y = 800, 600
 screen = pygame.display.set_mode((screen_x, screen_y))
 
@@ -39,23 +37,27 @@ class Cannon:
             self.color = BLACK
 
 
-class Ball:
+class Target:
     def __init__(self, x, y, r):
         self.x = x
         self.y = y
         self.r = r
 
     def draw(self):
-        ellipse(screen, BLACK, (self.x, self.y, self.r, self.r))
+        ellipse(screen, RED, (self.x, self.y, self.r, self.r))
+
+
+class Core:
+    pass
 
 
 finished = False
 clock = pygame.time.Clock()
-ball = Ball(ran(4 * screen_x // 5, screen_x), ran(0, screen_y), ran(30, 100))
+target = Target(ran(4 * screen_x // 5, screen_x), ran(0, screen_y), ran(30, 100))
 cannon = Cannon(20, 20)
 while not finished:
     clock.tick(FPS)
-    ball.draw()
+    target.draw()
     cannon.move()
     cannon.draw()
     for event in pygame.event.get():
