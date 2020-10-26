@@ -20,7 +20,7 @@ class Timer:
 
 
 class Cannon:
-    def __init__(self, start_side, color=BLACK, cord_x=screen_x // 30, cord_y=9 * screen_y // 10, width=7):
+    def __init__(self, start_side, color=BLACK, cord_x=screen_x // 30, cord_y=7 * screen_y // 10, width=7):
         self.color = color
         self.start_side = start_side
         self.side = start_side
@@ -50,13 +50,13 @@ class Cannon:
 
 
 class Target:
-    def __init__(self, x, y, r):
+    def __init__(self, x=ran(4 * screen_x // 5, screen_x - 50), y=ran(50, screen_y - 50), r=ran(5, 50)):
         self.x = x
         self.y = y
         self.r = r
 
     def draw(self):
-        ellipse(screen, RED, (self.x, self.y, self.r, self.r))
+        ellipse(screen, RED, (self.x - self.r, self.y - self.r, 2 * self.r, 2 * self.r))
 
 
 class Bullet:
@@ -82,7 +82,7 @@ class Bullet:
         if self.cord_x + self.r > screen_x:
             self.vx = -abs(self.vx) / 2
             self.vy = self.vy * 0.8
-            self.cord_x -= 5
+            self.cord_x -= 10
         if self.cord_y + self.r > screen_y:
             self.vy = -abs(self.vy) / 2
             self.vx = self.vx * 0.8
@@ -90,15 +90,21 @@ class Bullet:
 
 finished = False
 clock = pygame.time.Clock()
-target = Target(ran(4 * screen_x // 5, screen_x), ran(0, screen_y), ran(30, 100))
+
 cannon = Cannon(20)
+target = [Target(ran(4 * screen_x // 5, screen_x - 50), ran(50, screen_y - 50), ran(5, 50))]
 bullet = []
 timer = []
 while not finished:
     clock.tick(FPS)
-    target.draw()
     cannon.move()
     cannon.draw()
+    for one in target:
+        one.draw()
+        for bul in bullet:
+            if (bul.cord_x - one.x) ** 2 + (bul.cord_y - one.y) ** 2 <= (bul.r + one.r) ** 2:
+                target = target[:-1]
+                target.append(Target(ran(4 * screen_x // 5, screen_x - 50), ran(50, screen_y - 50), ran(5, 50)))
     for unit, watch in zip(bullet, timer):
         if watch.time():
             unit.move()
