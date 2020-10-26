@@ -10,6 +10,12 @@ screen_x, screen_y = 800, 600
 screen = pygame.display.set_mode((screen_x, screen_y))
 
 
+def score_count():
+    font = pygame.font.SysFont('arial', 32, True)
+    text_1 = font.render("Score: {}".format(score), True, BLACK)
+    screen.blit(text_1, text_1.get_rect(center=(screen_x // 10, screen_y // 10)))
+
+
 class Timer:
     def __init__(self, lap):
         self.lap = lap
@@ -50,7 +56,7 @@ class Cannon:
 
 
 class Target:
-    def __init__(self, x=ran(4 * screen_x // 5, screen_x - 50), y=ran(50, screen_y - 50), r=ran(5, 50)):
+    def __init__(self, x=ran(4 * screen_x // 5, screen_x - 50), y=ran(50, screen_y - 50), r=ran(10, 30)):
         self.x = x
         self.y = y
         self.r = r
@@ -71,12 +77,14 @@ class Bullet:
         self.vy = v * sin(self.angel)
         self.r = r
         self.g = g
+        self.tries = 0
 
     def move(self):
-        ellipse(screen, self.color, (self.cord_x - self.r, self.cord_y - self.r, 2 * self.r, 2 * self.r))
-        self.cord_x += self.vx
-        self.cord_y += self.vy
-        self.vy += self.g
+        if self.vx ** 2 + self.vy ** 2 > cannon.start_side / 12:
+            ellipse(screen, self.color, (self.cord_x - self.r, self.cord_y - self.r, 2 * self.r, 2 * self.r))
+            self.cord_x += self.vx
+            self.cord_y += self.vy
+            self.vy += self.g
 
     def ricochet(self):
         if self.cord_x + self.r > screen_x:
@@ -86,35 +94,48 @@ class Bullet:
         if self.cord_y + self.r > screen_y:
             self.vy = -abs(self.vy) / 2
             self.vx = self.vx * 0.8
+            self.cord_y -= 10
+
+    def text(self):
+        font = pygame.font.SysFont('arial', 32, True)
+        text_1 = font.render("You destroyed the target for {} shots.".format(self.tries), True, BLACK)
+        screen.blit(text_1, text_1.get_rect(center=(screen_x // 2, screen_y // 2)))
 
 
 finished = False
 clock = pygame.time.Clock()
 
+score = 0
 cannon = Cannon(20)
-target = [Target(ran(4 * screen_x // 5, screen_x - 50), ran(50, screen_y - 50), ran(5, 50))]
+target = [Target(ran(4 * screen_x // 5, screen_x - 50), ran(50, screen_y - 50), ran(10, 30))]
 bullet = []
-timer = []
 while not finished:
     clock.tick(FPS)
     cannon.move()
     cannon.draw()
+    score_count()
+    for unit in bullet:
+        unit.move()
+        unit.ricochet()
     for one in target:
         one.draw()
         for bul in bullet:
             if (bul.cord_x - one.x) ** 2 + (bul.cord_y - one.y) ** 2 <= (bul.r + one.r) ** 2:
+                screen.fill(WHITE)
+                bul.tries = len(bullet)
+                bul.text()
+                pygame.display.update()
+                pygame.time.wait(3000)
+                bullet = []
                 target = target[:-1]
-                target.append(Target(ran(4 * screen_x // 5, screen_x - 50), ran(50, screen_y - 50), ran(5, 50)))
-    for unit, watch in zip(bullet, timer):
-        if watch.time():
-            unit.move()
-            unit.ricochet()
+                target.append(Target(ran(4 * screen_x // 5, screen_x - 50), ran(50, screen_y - 50), ran(10, 30)))
+                score += 1
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
         elif event.type == pygame.MOUSEBUTTONUP:
             bullet.append(Bullet(cannon.cord_x, cannon.cord_y, 0.7 * (cannon.side - cannon.start_side)))
-            timer.append(Timer(4500))
 
     pygame.display.update()
     screen.fill(WHITE)
