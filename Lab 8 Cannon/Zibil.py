@@ -11,7 +11,12 @@ screen = pygame.display.set_mode((screen_x, screen_y))
 
 
 class Timer:
-    pygame.time.get_ticks()
+    def __init__(self, lap):
+        self.lap = lap
+        self.start_time = pygame.time.get_ticks()
+
+    def time(self):
+        return self.start_time + self.lap > pygame.time.get_ticks()
 
 
 class Cannon:
@@ -88,19 +93,22 @@ clock = pygame.time.Clock()
 target = Target(ran(4 * screen_x // 5, screen_x), ran(0, screen_y), ran(30, 100))
 cannon = Cannon(20)
 bullet = []
+timer = []
 while not finished:
     clock.tick(FPS)
     target.draw()
     cannon.move()
     cannon.draw()
-    for unit in bullet:
-        unit.move()
-        unit.ricochet()
+    for unit, watch in zip(bullet, timer):
+        if watch.time():
+            unit.move()
+            unit.ricochet()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
         elif event.type == pygame.MOUSEBUTTONUP:
             bullet.append(Bullet(cannon.cord_x, cannon.cord_y, 0.7 * (cannon.side - cannon.start_side)))
+            timer.append(Timer(4500))
 
     pygame.display.update()
     screen.fill(WHITE)
