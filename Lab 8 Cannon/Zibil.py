@@ -98,7 +98,7 @@ class Bullet:
 
     def text(self):
         font = pygame.font.SysFont('arial', 32, True)
-        text_1 = font.render("You destroyed the target for {} shots.".format(self.tries), True, BLACK)
+        text_1 = font.render("You destroyed the target with {} shots.".format(self.tries), True, BLACK)
         screen.blit(text_1, text_1.get_rect(center=(screen_x // 2, screen_y // 2)))
 
 
