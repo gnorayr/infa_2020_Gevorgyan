@@ -29,7 +29,7 @@ class Timer:
 
 class Ground:
     def __init__(self):
-        self.y = 19 * screen_y / 20
+        self.y = 19 * screen_y // 20
 
     def draw(self):
         line(screen, BLACK, (0, self.y), (screen_x, self.y), 3)
@@ -115,30 +115,12 @@ class Target:
     def __init__(self):
         self.color = RED
         self.r = ran(35, 45)
-        self.x = ran(4 * screen_x // 5, screen_x - 10 - self.r)
-        self.y = ran(self.r, int(ground.y - self.r))
-
-    def draw(self):
-        circle(screen, self.color, (self.x, self.y), self.r)
-        circle(screen, WHITE, (self.x, self.y), 4 * self.r / 5)
-        circle(screen, self.color, (self.x, self.y), 3 * self.r / 5)
-        circle(screen, WHITE, (self.x, self.y), 2 * self.r / 5)
-        circle(screen, self.color, (self.x, self.y), self.r / 5)
-
-    def move(self):
-        pass
-
-
-class TargetTwo:
-    def __init__(self):
-        self.color = RED
-        self.r = ran(35, 45)
-        self.x = ran(screen_x // 5, screen_x - 10 - self.r)
+        self.x = ran(self.r, screen_x - self.r)
         self.y = ran(self.r, screen_y // 3 - self.r)
         self.v = self.r / 5
         self.angle = ran(0, int(2 * pi * 100))
-        self.vx = self.v * cos(self.angle)
-        self.vy = self.v * sin(self.angle)
+        self.vx = self.v * cos(self.angle // 100)
+        self.vy = self.v * sin(self.angle // 100)
 
     def draw(self):
         circle(screen, self.color, (self.x, self.y), self.r)
@@ -154,10 +136,14 @@ class TargetTwo:
             self.vx = -abs(self.vx)
         if self.y + self.r > screen_y // 3:
             self.vy = -abs(self.vy)
-        if self.x - self.r < screen_x // 5:
+        if self.x - self.r < 0:
             self.vx = abs(self.vx)
         if self.y - self.r < 0:
             self.vy = abs(self.vy)
+
+    def is_touching(self, other: Bullet):
+        dist = ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
+        return dist <= self.r + other.r
 
 
 finished = False
@@ -166,7 +152,7 @@ clock = pygame.time.Clock()
 score = 0
 ground = Ground()
 cannon = Cannon(40, y=ground.y)
-target = [Target(), TargetTwo()]
+target = [Target(), Target()]
 bullet = []
 while not finished:
     clock.tick(FPS)
@@ -181,16 +167,14 @@ while not finished:
         one.draw()
         one.move()
         for bul in bullet:
-            if (bul.x - one.x) ** 2 + (bul.y - one.y) ** 2 <= (bul.r + one.r) ** 2:
+            if one.is_touching(bul):
                 screen.fill(WHITE)
                 bul.tries = len(bullet)
                 bul.text()
                 pygame.display.update()
                 pygame.time.wait(1000)
                 bullet = []
-                target = target[:-2]
-                target.append(TargetTwo())
-                target.append(Target())
+                target = [Target(), Target()]
                 score += 1
 
     for event in pygame.event.get():
