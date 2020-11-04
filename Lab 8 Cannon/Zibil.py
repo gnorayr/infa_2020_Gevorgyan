@@ -3,7 +3,7 @@ from pygame.draw import *
 from random import randint as ran
 from math import sin, cos, atan, pi
 
-from my_color import *
+from my_colors import *
 
 "Version pygame 2.0.0"
 pygame.init()
@@ -13,9 +13,16 @@ screen = pygame.display.set_mode((screen_x, screen_y))
 
 
 def score_count():
-    font = pygame.font.SysFont('arial', 32, True)
+    font = pygame.font.SysFont('arial', 25, True)
     text_1 = font.render("Score: {}".format(score), True, BLACK)
-    screen.blit(text_1, text_1.get_rect(center=(screen_x // 10, screen_y // 10)))
+    screen.blit(text_1, text_1.get_rect(center=(screen_x // 15, screen_y // 15)))
+
+
+def tries_count():
+    tries = len(bullet)
+    font = pygame.font.SysFont('arial', 25, True)
+    text_1 = font.render("Tries: {}".format(tries), True, BLACK)
+    screen.blit(text_1, text_1.get_rect(center=(screen_x // 15, screen_y // 10)))
 
 
 class Timer:
@@ -28,8 +35,8 @@ class Timer:
 
 
 class Ground:
-    def __init__(self):
-        self.y = 19 * screen_y // 20
+    def __init__(self, y=19 * screen_y // 20):
+        self.y = y
 
     def draw(self):
         line(screen, BLACK, (0, self.y), (screen_x, self.y), 3)
@@ -84,7 +91,6 @@ class Bullet:
         self.vy = v * sin(self.angel)
         self.r = r
         self.g = g
-        self.tries = 0
 
     def draw(self):
         if self.vx ** 2 + self.vy ** 2 > cannon.start_side / 12 or self.y < ground.y - 20:
@@ -105,18 +111,17 @@ class Bullet:
             self.vx = self.vx * 0.8
             self.y -= 10
 
-    def text(self):
-        font = pygame.font.SysFont('arial', 32, True)
-        text_1 = font.render("You hit the target with {} tries.".format(self.tries), True, BLACK)
-        screen.blit(text_1, text_1.get_rect(center=(screen_x // 2, screen_y // 2)))
-
 
 class Target:
-    def __init__(self):
+    def __init__(self, top=0, bottom=screen_y, left=0, right=screen_x):
         self.color = RED
-        self.r = ran(35, 45)
-        self.x = ran(self.r, screen_x - self.r)
-        self.y = ran(self.r, screen_y // 3 - self.r)
+        self.r = ran(20, 25)
+        self.right = right - self.r
+        self.left = left + self.r
+        self.top = top + self.r
+        self.bottom = bottom - self.r
+        self.x = ran(self.left, self.right)
+        self.y = ran(self.top, self.bottom)
         self.v = self.r / 5
         self.angle = ran(0, int(2 * pi * 100))
         self.vx = self.v * cos(self.angle // 100)
@@ -132,13 +137,13 @@ class Target:
     def move(self):
         self.x += self.vx
         self.y += self.vy
-        if self.x + self.r > screen_x:
+        if self.x > self.right:
             self.vx = -abs(self.vx)
-        if self.y + self.r > screen_y // 3:
+        if self.y > self.bottom:
             self.vy = -abs(self.vy)
-        if self.x - self.r < 0:
+        if self.x < self.left:
             self.vx = abs(self.vx)
-        if self.y - self.r < 0:
+        if self.y < self.top:
             self.vy = abs(self.vy)
 
     def is_touching(self, other: Bullet):
@@ -152,7 +157,8 @@ clock = pygame.time.Clock()
 score = 0
 ground = Ground()
 cannon = Cannon(40, y=ground.y)
-target = [Target(), Target()]
+target_1, target_2 = Target(), Target()
+target_list = [target_1, target_2]
 bullet = []
 while not finished:
     clock.tick(FPS)
@@ -160,21 +166,18 @@ while not finished:
     cannon.move()
     cannon.draw()
     score_count()
+    tries_count()
     for unit in bullet:
         unit.move()
         unit.draw()
-    for one in target:
+    for one in target_list:
         one.draw()
         one.move()
         for bul in bullet:
             if one.is_touching(bul):
-                screen.fill(WHITE)
-                bul.tries = len(bullet)
-                bul.text()
-                pygame.display.update()
-                pygame.time.wait(1000)
                 bullet = []
-                target = [Target(), Target()]
+                target_1, target_2 = Target(), Target()
+                target_list = [target_1, target_2]
                 score += 1
 
     for event in pygame.event.get():
