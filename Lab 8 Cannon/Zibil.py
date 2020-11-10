@@ -1,7 +1,7 @@
 import pygame
 from pygame.draw import *
 from random import randint as ran
-from math import sin, cos, atan, pi
+from math import sin, cos, acos, pi
 
 from my_colors import *
 
@@ -50,6 +50,7 @@ class Cannon:
         self.r = start_side / 2
         self.x = x
         self.y = y - self.r - 2
+        self.v = 1.1
         self.width = width
         self.side_v = start_side / 75
         self.angle = 0
@@ -64,10 +65,10 @@ class Cannon:
                                      (self.x + self.width * sin(self.angle),
                                       self.y - self.width * cos(self.angle))])
 
-    def move(self):
+    def muzzle_move(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        if mouse_x - self.x > 0 > mouse_y - self.y:
-            self.angle = atan((mouse_y - self.y) / (mouse_x - self.x))
+        if 0 > mouse_y - self.y:
+            self.angle = -acos((mouse_x - self.x) / ((mouse_y - self.y) ** 2 + (mouse_x - self.x) ** 2) ** 0.5)
 
         if pygame.mouse.get_pressed(3)[0]:
             self.side += self.side_v
@@ -78,6 +79,13 @@ class Cannon:
 
         else:
             self.side = self.start_side
+
+    def move(self):
+        key = pygame.key.get_pressed()
+        if key[pygame.K_RIGHT] or key[pygame.K_d]:
+            self.x += self.v
+        if key[pygame.K_LEFT] or key[pygame.K_a]:
+            self.x -= self.v
 
 
 class Bullet:
@@ -113,7 +121,7 @@ class Bullet:
 
 
 class Target:
-    def __init__(self, top=0, bottom=screen_y, left=0, right=screen_x):
+    def __init__(self, bottom=screen_y, top=0, left=0, right=screen_x):
         self.color = RED
         self.r = ran(20, 25)
         self.right = right - self.r
@@ -157,27 +165,27 @@ clock = pygame.time.Clock()
 score = 0
 ground = Ground()
 cannon = Cannon(40, y=ground.y)
-target_1, target_2 = Target(), Target()
-target_list = [target_1, target_2]
+target_list = [Target(ground.y) for i in range(2)]
 bullet = []
 while not finished:
     clock.tick(FPS)
     ground.draw()
     cannon.move()
     cannon.draw()
+    cannon.muzzle_move()
     score_count()
     tries_count()
     for unit in bullet:
         unit.move()
         unit.draw()
-    for one in target_list:
-        one.draw()
-        one.move()
+    for target in target_list:
+        target.draw()
+        target.move()
         for bul in bullet:
-            if one.is_touching(bul):
+            if target.is_touching(bul):
+                target_list.remove(target)
+                target_list.append(Target(ground.y))
                 bullet = []
-                target_1, target_2 = Target(), Target()
-                target_list = [target_1, target_2]
                 score += 1
 
     for event in pygame.event.get():
