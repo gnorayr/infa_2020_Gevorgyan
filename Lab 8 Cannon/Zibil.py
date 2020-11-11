@@ -6,7 +6,6 @@ from pygame.draw import *
 
 from my_colors import *
 
-"Version pygame 2.0.0"
 pygame.init()
 FPS = 60
 screen_x, screen_y = 1200, 600
@@ -44,14 +43,14 @@ class Ground:
 
 
 class Cannon:
-    def __init__(self, start_side, y, x=screen_x // 25, color=ARMY, width=9):
+    def __init__(self, start_side, y, x=screen_x / 2, color=ARMY, width=9):
         self.color = color
         self.start_side = start_side
         self.side = start_side
         self.r = start_side / 2
         self.x = x
         self.y = y - self.r - 2
-        self.v = 1.1
+        self.v = 1.5
         self.width = width
         self.side_v = start_side / 75
         self.angle = 0
@@ -71,7 +70,7 @@ class Cannon:
         if 0 > mouse_y - self.y:
             self.angle = -acos((mouse_x - self.x) / ((mouse_y - self.y) ** 2 + (mouse_x - self.x) ** 2) ** 0.5)
 
-        if pygame.mouse.get_pressed(3)[0]:
+        if pygame.mouse.get_pressed(5)[0]:
             self.side += self.side_v
             if self.side > 1.7 * self.start_side:
                 self.side_v = -abs(self.side_v)
@@ -184,7 +183,7 @@ ground = Ground()
 cannon = Cannon(40, y=ground.y)
 targets = [Target(ground.y) for i in range(2)]
 bullets = []
-butterflyes = [Butterfly()]
+butterflies = [Butterfly()]
 while not finished:
     clock.tick(FPS)
     ground.draw()
@@ -205,21 +204,23 @@ while not finished:
                 targets.append(Target(ground.y))
                 bullets = []
                 score += 1
-    for butterfly in butterflyes:
+    for butterfly in butterflies:
         butterfly.draw()
         butterfly.move()
         pygame.display.update()
         for bullet in bullets:
             if butterfly.is_touching(bullet):
-                butterflyes.remove(butterfly)
-                butterflyes.append(Butterfly())
+                butterflies.remove(butterfly)
+                butterflies.append(Butterfly())
                 bullets = []
                 score += 1
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
-        elif event.type == pygame.MOUSEBUTTONUP:
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            pass
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             bullets.append(Bullet(cannon.x + cannon.side * cos(cannon.angle) + 0.5 * cannon.width * sin(cannon.angle),
                                   cannon.y + cannon.side * sin(cannon.angle) - 0.5 * cannon.width * cos(cannon.angle),
                                   1.3 * (cannon.side - cannon.start_side), cannon.width))
