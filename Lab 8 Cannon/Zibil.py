@@ -1,7 +1,8 @@
-import pygame
-from pygame.draw import *
 from random import randint as ran
 from math import sin, cos, acos, pi
+
+import pygame
+from pygame.draw import *
 
 from my_colors import *
 
