@@ -16,14 +16,14 @@ screen = pygame.display.set_mode((screen_x, screen_y))
 def score_count():
     font = pygame.font.SysFont('arial', 25, True)
     text_1 = font.render("Score: {}".format(score), True, BLACK)
-    screen.blit(text_1, text_1.get_rect(center=(screen_x // 15, screen_y // 15)))
+    screen.blit(text_1, text_1.get_rect(center=(screen_x // 25, screen_y // 50)))
 
 
 def tries_count():
-    tries = len(bullet)
+    tries = len(bullets)
     font = pygame.font.SysFont('arial', 25, True)
     text_1 = font.render("Tries: {}".format(tries), True, BLACK)
-    screen.blit(text_1, text_1.get_rect(center=(screen_x // 15, screen_y // 10)))
+    screen.blit(text_1, text_1.get_rect(center=(screen_x // 8, screen_y // 50)))
 
 
 class Timer:
@@ -125,13 +125,13 @@ class Target:
     def __init__(self, bottom=screen_y, top=0, left=0, right=screen_x):
         self.color = RED
         self.r = ran(20, 25)
-        self.right = right - self.r
-        self.left = left + self.r
-        self.top = top + self.r
-        self.bottom = bottom - self.r
-        self.x = ran(self.left, self.right)
-        self.y = ran(self.top, self.bottom)
-        self.v = self.r / 5
+        self.right = right
+        self.left = left
+        self.top = top
+        self.bottom = bottom
+        self.x = ran(self.left + self.r, self.right - self.r)
+        self.y = ran(self.top + self.r, self.bottom - self.r)
+        self.v = self.r / 4
         self.angle = ran(0, int(2 * pi * 100))
         self.vx = self.v * cos(self.angle // 100)
         self.vy = self.v * sin(self.angle // 100)
@@ -146,18 +146,32 @@ class Target:
     def move(self):
         self.x += self.vx
         self.y += self.vy
-        if self.x > self.right:
+        if self.x > self.right - self.r:
             self.vx = -abs(self.vx)
-        if self.y > self.bottom:
+        if self.y > self.bottom - self.r:
             self.vy = -abs(self.vy)
-        if self.x < self.left:
+        if self.x < self.left + self.r:
             self.vx = abs(self.vx)
-        if self.y < self.top:
+        if self.y < self.top + self.r:
             self.vy = abs(self.vy)
 
     def is_touching(self, other: Bullet):
         dist = ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
         return dist <= self.r + other.r
+
+
+class Butterfly(Target):
+    def __init__(self):
+        super().__init__()
+        self.r = ran(30, 45)
+
+    def draw(self):
+        butterfly_pic = pygame.image.load('moonlight_butterfly.png')
+        butterfly_pic = pygame.transform.scale(butterfly_pic, (self.r * 2, self.r * 2))
+        screen.blit(butterfly_pic, (self.x - self.r, self.y - self.r))
+
+    def is_touching(self, other: Bullet):
+        pass
 
 
 finished = False
@@ -167,7 +181,8 @@ score = 0
 ground = Ground()
 cannon = Cannon(40, y=ground.y)
 target_list = [Target(ground.y) for i in range(2)]
-bullet = []
+bullets = []
+butterfly = (Butterfly())
 while not finished:
     clock.tick(FPS)
     ground.draw()
@@ -176,26 +191,28 @@ while not finished:
     cannon.muzzle_move()
     score_count()
     tries_count()
-    for unit in bullet:
-        unit.move()
-        unit.draw()
+    butterfly.draw()
+    butterfly.move()
+    for bullet in bullets:
+        bullet.move()
+        bullet.draw()
     for target in target_list:
         target.draw()
         target.move()
-        for bul in bullet:
-            if target.is_touching(bul):
+        for bullet in bullets:
+            if target.is_touching(bullet):
                 target_list.remove(target)
                 target_list.append(Target(ground.y))
-                bullet = []
+                bullets = []
                 score += 1
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
         elif event.type == pygame.MOUSEBUTTONUP:
-            bullet.append(Bullet(cannon.x + cannon.side * cos(cannon.angle) + 0.5 * cannon.width * sin(cannon.angle),
-                                 cannon.y + cannon.side * sin(cannon.angle) - 0.5 * cannon.width * cos(cannon.angle),
-                                 1.3 * (cannon.side - cannon.start_side), cannon.width))
+            bullets.append(Bullet(cannon.x + cannon.side * cos(cannon.angle) + 0.5 * cannon.width * sin(cannon.angle),
+                                  cannon.y + cannon.side * sin(cannon.angle) - 0.5 * cannon.width * cos(cannon.angle),
+                                  1.3 * (cannon.side - cannon.start_side), cannon.width))
 
     pygame.display.update()
     screen.fill(WHITE)
