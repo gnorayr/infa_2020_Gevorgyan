@@ -171,7 +171,9 @@ class Butterfly(Target):
         screen.blit(butterfly_pic, (self.x - self.r, self.y - self.r))
 
     def is_touching(self, other: Bullet):
-        pass
+        dist_x = abs(self.x - other.x)
+        dist_y = abs(self.y - other.y)
+        return dist_x < self.r + other.r and dist_y < self.r + other.r
 
 
 finished = False
@@ -180,9 +182,9 @@ clock = pygame.time.Clock()
 score = 0
 ground = Ground()
 cannon = Cannon(40, y=ground.y)
-target_list = [Target(ground.y) for i in range(2)]
+targets = [Target(ground.y) for i in range(2)]
 bullets = []
-butterfly = (Butterfly())
+butterflyes = [Butterfly()]
 while not finished:
     clock.tick(FPS)
     ground.draw()
@@ -191,18 +193,26 @@ while not finished:
     cannon.muzzle_move()
     score_count()
     tries_count()
-    butterfly.draw()
-    butterfly.move()
     for bullet in bullets:
         bullet.move()
         bullet.draw()
-    for target in target_list:
+    for target in targets:
         target.draw()
         target.move()
         for bullet in bullets:
             if target.is_touching(bullet):
-                target_list.remove(target)
-                target_list.append(Target(ground.y))
+                targets.remove(target)
+                targets.append(Target(ground.y))
+                bullets = []
+                score += 1
+    for butterfly in butterflyes:
+        butterfly.draw()
+        butterfly.move()
+        pygame.display.update()
+        for bullet in bullets:
+            if butterfly.is_touching(bullet):
+                butterflyes.remove(butterfly)
+                butterflyes.append(Butterfly())
                 bullets = []
                 score += 1
 
