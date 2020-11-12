@@ -89,8 +89,8 @@ class Cannon:
 
 
 class Bullet:
-    def __init__(self, x, y, v, r, g=0.4):
-        self.angel = cannon.angle
+    def __init__(self, x, y, v, r, angle):
+        self.angel = angle
         self.color = BLACK
         self.x = x
         self.y = y
@@ -98,7 +98,7 @@ class Bullet:
         self.vx = v * cos(self.angel)
         self.vy = v * sin(self.angel)
         self.r = r
-        self.g = g
+        self.g = 0.4
 
     def draw(self):
         if self.vx ** 2 + self.vy ** 2 > cannon.start_side / 12 or self.y < ground.y - 20:
@@ -114,6 +114,10 @@ class Bullet:
             self.vx = -abs(self.vx) / 2
             self.vy = self.vy * 0.8
             self.x -= 10
+        if self.x - self.r < 0:
+            self.vx = abs(self.vx) / 2
+            self.vy = self.vy * 0.8
+            self.x += 10
         if self.y + self.r > ground.y:
             self.vy = -abs(self.vy) / 2
             self.vx = self.vx * 0.8
@@ -161,8 +165,8 @@ class Target:
 
 class Butterfly(Target):
     def __init__(self):
-        super().__init__()
-        self.r = ran(30, 45)
+        super().__init__(ground.y)
+        self.r = ran(25, 35)
 
     def draw(self):
         butterfly_pic = pygame.image.load('moonlight_butterfly.png')
@@ -179,6 +183,7 @@ finished = False
 clock = pygame.time.Clock()
 
 score = 0
+bullet_type_1 = True
 ground = Ground()
 cannon = Cannon(40, y=ground.y)
 targets = [Target(ground.y) for i in range(2)]
@@ -200,30 +205,42 @@ while not finished:
         target.move()
         for bullet in bullets:
             if target.is_touching(bullet):
-                targets.remove(target)
-                targets.append(Target(ground.y))
-                bullets = []
-                score += 1
+                try:
+                    targets.remove(target)
+                    targets.append(Target(ground.y))
+                    bullets = []
+                    score += 1
+                except:
+                    pass
     for butterfly in butterflies:
         butterfly.draw()
         butterfly.move()
-        pygame.display.update()
         for bullet in bullets:
             if butterfly.is_touching(bullet):
-                butterflies.remove(butterfly)
-                butterflies.append(Butterfly())
-                bullets = []
-                score += 1
+                try:
+                    butterflies.remove(butterfly)
+                    butterflies.append(Butterfly())
+                    bullets = []
+                    score += 1
+                except:
+                    pass
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            pass
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 3:
+            bullet_type_1 = not bullet_type_1
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            bullets.append(Bullet(cannon.x + cannon.side * cos(cannon.angle) + 0.5 * cannon.width * sin(cannon.angle),
-                                  cannon.y + cannon.side * sin(cannon.angle) - 0.5 * cannon.width * cos(cannon.angle),
-                                  1.3 * (cannon.side - cannon.start_side), cannon.width))
+            if bullet_type_1:
+                bullets.append(Bullet(cannon.x + cannon.side * cos(cannon.angle),
+                                      cannon.y + cannon.side * sin(cannon.angle),
+                                      1.3 * (cannon.side - cannon.start_side), cannon.width, cannon.angle))
+            else:
+                for delta_angle in range(-5, 5):
+                    bullets.append(Bullet(cannon.x + cannon.side * cos(cannon.angle),
+                                          cannon.y + cannon.side * sin(cannon.angle),
+                                          1.3 * (cannon.side - cannon.start_side), cannon.width / 7,
+                                          cannon.angle + delta_angle / 100))
 
     pygame.display.update()
     screen.fill(WHITE)
