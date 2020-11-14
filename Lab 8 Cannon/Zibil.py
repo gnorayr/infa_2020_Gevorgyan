@@ -7,88 +7,40 @@ from pygame.draw import *
 from my_colors import *
 
 pygame.init()
+
 FPS = 60
-screen_x, screen_y = 1200, 600
-screen = pygame.display.set_mode((screen_x, screen_y))
+SCREEN_X, SCREEN_Y = 1200, 600
+screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
 
 
 def score_count():
     font = pygame.font.SysFont('arial', 25, True)
     text_1 = font.render("Score: {}".format(score), True, BLACK)
-    screen.blit(text_1, text_1.get_rect(center=(screen_x // 25, screen_y // 50)))
+    screen.blit(text_1, text_1.get_rect(center=(SCREEN_X // 25, SCREEN_Y // 50)))
 
 
-class Time:
-    def __init__(self, lap):
+class Timer:
+    def __init__(self, lap=1000):
         self.lap = lap
         self.start_time = pygame.time.get_ticks()
 
-    def passed(self):
+    def time_passed(self):
         return pygame.time.get_ticks() > self.start_time + self.lap
 
-    def new_lap(self):
+    def waits(self):
         self.start_time = pygame.time.get_ticks()
 
 
 class Ground:
-    def __init__(self, y=19 * screen_y // 20):
+    def __init__(self, y=19 * SCREEN_Y // 20):
         self.y = y
 
     def draw(self):
-        line(screen, BLACK, (0, self.y), (screen_x, self.y), 3)
-
-
-class Bullet:
-    def __init__(self, x, y, v, r, angle):
-        self.angel = angle
-        self.color = GREY
-        self.x = x
-        self.y = y
-        self.v = v
-        self.vx = v * cos(self.angel)
-        self.vy = v * sin(self.angel)
-        self.r = r
-        self.g = 0.4
-
-    def disappears(self):
-        return self.vx ** 2 + self.vy ** 2 < cannon.start_side / 12 and self.y > ground.y - 20 or \
-               self.y < - 0.3 * screen_y
-
-    def draw(self):
-        circle(screen, self.color, (self.x, self.y), self.r)
-
-    def move(self):
-        self.x += self.vx
-        self.y += self.vy
-        self.vy += self.g
-
-        if self.x + self.r > screen_x:
-            self.vx = -self.vx / 2
-            self.vy = self.vy * 0.8
-            self.x = screen_x - self.r
-        if self.x - self.r < 0:
-            self.vx = -self.vx / 2
-            self.vy = self.vy * 0.8
-            self.x = self.r
-        if self.y + self.r > ground.y:
-            self.vy = -self.vy / 2
-            self.vx = self.vx * 0.8
-            self.y = ground.y - self.r
-
-
-class Bomb(Bullet):
-    def __init__(self, x, y, r, vx, vy):
-        super().__init__(x, y, 0, r, 0)
-        self.vx = vx
-        self.vy = vy
-        self.color = BLACK
-
-    def disappears(self):
-        return self.y >= ground.y - self.r - self.vy
+        line(screen, BLACK, (0, self.y), (SCREEN_X, self.y), 3)
 
 
 class Cannon:
-    def __init__(self, start_side, y, x=screen_x / 2, color=ARMY, width=9):
+    def __init__(self, start_side, y, x=SCREEN_X / 2, color=ARMY, width=9):
         self.color = color
         self.start_side = start_side
         self.side = start_side
@@ -137,12 +89,12 @@ class Cannon:
 
     def move(self):
         key = pygame.key.get_pressed()
-        if (key[pygame.K_RIGHT] or key[pygame.K_d]) and self.x + 2 * self.r < screen_x:
+        if (key[pygame.K_RIGHT] or key[pygame.K_d]) and self.x + 2 * self.r < SCREEN_X:
             self.x += self.v
         if (key[pygame.K_LEFT] or key[pygame.K_a]) and self.x - 2 * self.r > 0:
             self.x -= self.v
 
-    def is_touching(self, other: Bullet):
+    def is_touching(self, other):
         dist = ((self.x - other.x) ** 2 + (self.y + self.r - other.y) ** 2) ** 0.5
         return dist <= 2 * self.r + other.r
 
@@ -153,8 +105,63 @@ class Cannon:
         return self.health <= 0
 
 
+class Ammunition:
+    def __init__(self, color, x, y, r, vx, vy):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.r = r
+        self.vx = vx
+        self.vy = vy
+        self.g = 0.4
+
+    def draw(self):
+        circle(screen, self.color, (self.x, self.y), self.r)
+
+    def move(self):
+        self.x += self.vx
+        self.y += self.vy
+        self.vy += self.g
+
+        if self.x + self.r > SCREEN_X:
+            self.vx = -self.vx / 2
+            self.vy = self.vy * 0.8
+            self.x = SCREEN_X - self.r
+        if self.x - self.r < 0:
+            self.vx = -self.vx / 2
+            self.vy = self.vy * 0.8
+            self.x = self.r
+        if self.y + self.r > ground.y:
+            self.vy = -self.vy / 2
+            self.vx = self.vx * 0.8
+            self.y = ground.y - self.r
+
+
+class Bullet(Ammunition):
+    def __init__(self, other, r, angle):
+        self.v = 1.3 * (other.side - other.start_side)
+        super().__init__(GREY,
+                         other.x + other.side * cos(other.angle),
+                         other.y + other.side * sin(other.angle),
+                         r,
+                         self.v * cos(angle),
+                         self.v * sin(angle))
+
+    def disappears(self):
+        return self.vx ** 2 + self.vy ** 2 < cannon.start_side / 12 and self.y > ground.y - 20 or \
+               self.y < - 0.3 * SCREEN_Y
+
+
+class Bomb(Ammunition):
+    def __init__(self, other, r):
+        super().__init__(BLACK, other.x, other.y, r, other.vx, other.vy)
+
+    def disappears(self):
+        return self.y >= ground.y - self.r - self.vy
+
+
 class Target:
-    def __init__(self, bottom=screen_y, top=0, left=0, right=screen_x):
+    def __init__(self, bottom=SCREEN_Y, top=0, left=0, right=SCREEN_X):
         self.color = RED
         self.r = ran(20, 25)
         self.right = right
@@ -192,9 +199,10 @@ class Target:
         return dist <= self.r + other.r
 
 
-class Butterfly(Target):
+class Butterfly(Target, Timer):
     def __init__(self):
-        super().__init__(bottom=ground.y)
+        Target.__init__(self, bottom=ground.y)
+        Timer.__init__(self)
         self.r = ran(25, 35)
         self.v = self.r / 2
 
@@ -219,7 +227,7 @@ cannon = Cannon(40, y=ground.y)
 targets = [Target(ground.y) for i in range(2)]
 bullets = []
 bombs = []
-butterflies = [(Butterfly(), Time(1000))]
+butterflies = [Butterfly()]
 while not finished:
     clock.tick(FPS)
     ground.draw()
@@ -231,7 +239,7 @@ while not finished:
 
     butterfly_number = score // 5 + 1
     if len(butterflies) < butterfly_number:
-        butterflies.append((Butterfly(), Time(1000)))
+        butterflies.append(Butterfly())
 
     if cannon.is_dead():
         finished = True
@@ -247,7 +255,7 @@ while not finished:
         bomb.draw()
     for bomb in bombs:
         if cannon.is_touching(bomb):
-            cannon.health -= 10
+            cannon.health -= cannon.max_health / 5
             bombs.remove(bomb)
     for target in targets:
         target.move()
@@ -260,20 +268,23 @@ while not finished:
                 bullets.remove(bullet)
                 score += 1
                 if cannon.health_is_not_full():
-                    cannon.health += 1
+                    cannon.health += cannon.max_health / 50
 
-    for butterfly, time in butterflies:
+    for butterfly in butterflies:
         butterfly.move()
         butterfly.draw()
-        if time.passed():
-            time.new_lap()
-            bombs.append(Bomb(butterfly.x, butterfly.y, 10, butterfly.vx, butterfly.vy))
+        if butterfly.time_passed():
+            bombs.append(Bomb(butterfly, 10))
+            butterfly.waits()
     for bullet in bullets:
-        for butterfly, time in butterflies:
+        for butterfly in butterflies:
             if butterfly.is_touching(bullet):
-                butterflies.remove((butterfly, time))
-                butterflies.append((Butterfly(), Time(1000)))
-                bullets.remove(bullet)
+                butterflies.remove(butterfly)
+                butterflies.append(Butterfly())
+                try:
+                    bullets.remove(bullet)
+                except:
+                    print("Congratulations you hit two targets with one shot!!!")
                 score += 1
                 if cannon.health_is_not_full():
                     cannon.health += 1
@@ -285,18 +296,12 @@ while not finished:
             bullet_type_1 = not bullet_type_1
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if bullet_type_1:
-                bullets.append(Bullet(cannon.x + cannon.side * cos(cannon.angle),
-                                      cannon.y + cannon.side * sin(cannon.angle),
-                                      1.3 * (cannon.side - cannon.start_side), cannon.width, cannon.angle))
+                bullets.append(Bullet(cannon, cannon.width, cannon.angle))
             else:
                 for delta_angle in range(-1, 2):
-                    bullets.append(Bullet(cannon.x + cannon.side * cos(cannon.angle),
-                                          cannon.y + cannon.side * sin(cannon.angle),
-                                          1.3 * (cannon.side - cannon.start_side), cannon.width / 3,
-                                          cannon.angle + delta_angle / 35))
+                    bullets.append(Bullet(cannon, cannon.width / 3, cannon.angle + delta_angle / 35))
 
     pygame.display.update()
     screen.fill(WHITE)
 
 pygame.quit()
-
