@@ -53,6 +53,7 @@ class Game:
             self.add_butterfly()
 
             if self.cannon.is_dead():
+                print("your score is", self.score)
                 finished = True
 
             for target in self.targets:
@@ -111,6 +112,7 @@ class Game:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    print("your score is", self.score)
                     finished = True
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 3:
                     bullet_type_1 = not bullet_type_1
