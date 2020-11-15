@@ -10,13 +10,109 @@ pygame.init()
 
 FPS = 60
 SCREEN_X, SCREEN_Y = 1200, 600
+GROUND_Y = 19 * SCREEN_Y // 20
+
 screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
 
 
-def score_count():
-    font = pygame.font.SysFont('arial', 25, True)
-    text_1 = font.render("Score: {}".format(score), True, BLACK)
-    screen.blit(text_1, text_1.get_rect(center=(SCREEN_X // 25, SCREEN_Y // 50)))
+class Game:
+    def __init__(self):
+        self.clock = pygame.time.Clock()
+
+        self.score = 0
+        self.cannon = Cannon(40, y=GROUND_Y)
+        self.targets = [Target(GROUND_Y) for i in range(2)]
+        self.bullets = []
+        self.bombs = []
+        self.butterflies = [Butterfly()]
+
+    def score_count(self):
+        font = pygame.font.SysFont('arial', 25, True)
+        text_1 = font.render("Score: {}".format(self.score), True, BLACK)
+        screen.blit(text_1, text_1.get_rect(center=(SCREEN_X // 25, SCREEN_Y // 50)))
+
+    def ground_draw(self):
+        line(screen, BLACK, (0, GROUND_Y), (SCREEN_X, GROUND_Y), 3)
+
+    def mainloop(self):
+        finished = False
+        bullet_type_1 = True
+        while not finished:
+            self.clock.tick(FPS)
+            self.ground_draw()
+            self.cannon.move()
+            self.cannon.muzzle_move()
+            self.cannon.draw()
+            self.cannon.health_draw()
+            self.score_count()
+
+            butterfly_number = self.score // 5 + 1
+            if len(self.butterflies) < butterfly_number:
+                self.butterflies.append(Butterfly())
+
+            if self.cannon.is_dead():
+                finished = True
+            for bullet in self.bullets:
+                if bullet.disappears(self.cannon):
+                    self.bullets.remove(bullet)
+                bullet.move()
+                bullet.draw()
+            for bomb in self.bombs:
+                if bomb.disappears():
+                    self.bombs.remove(bomb)
+                bomb.move()
+                bomb.draw()
+            for bomb in self.bombs:
+                if self.cannon.is_touching(bomb):
+                    self.cannon.health -= self.cannon.max_health / 5
+                    self.bombs.remove(bomb)
+            for target in self.targets:
+                target.move()
+                target.draw()
+            for bullet in self.bullets:
+                for target in self.targets:
+                    if target.is_touching(bullet):
+                        self.targets.remove(target)
+                        self.targets.append(Target(GROUND_Y))
+                        self.bullets.remove(bullet)
+                        self.score += 1
+                        if self.cannon.health_is_not_full():
+                            self.cannon.health += self.cannon.max_health / 50
+
+            for butterfly in self.butterflies:
+                butterfly.move()
+                butterfly.draw()
+                if butterfly.time_passed():
+                    self.bombs.append(Bomb(butterfly, 10))
+                    butterfly.waits()
+            for bullet in self.bullets:
+                for butterfly in self.butterflies:
+                    if butterfly.is_touching(bullet):
+                        self.butterflies.remove(butterfly)
+                        self.butterflies.append(Butterfly())
+                        try:
+                            self.bullets.remove(bullet)
+                        except ValueError:
+                            print("Congratulations you hit two butterflies with one shot!!!")
+                        self.score += 1
+                        if self.cannon.health_is_not_full():
+                            self.cannon.health += 1
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    finished = True
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 3:
+                    bullet_type_1 = not bullet_type_1
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    if bullet_type_1:
+                        self.bullets.append(Bullet(self.cannon, self.cannon.width, self.cannon.angle))
+                    else:
+                        for delta_angle in range(-1, 2):
+                            self.bullets.append(Bullet(self.cannon, self.cannon.width / 3,
+                                                       self.cannon.angle + delta_angle / 35))
+
+            pygame.display.update()
+            screen.fill(WHITE)
 
 
 class Timer:
@@ -29,14 +125,6 @@ class Timer:
 
     def waits(self):
         self.start_time = pygame.time.get_ticks()
-
-
-class Ground:
-    def __init__(self, y=19 * SCREEN_Y // 20):
-        self.y = y
-
-    def draw(self):
-        line(screen, BLACK, (0, self.y), (SCREEN_X, self.y), 3)
 
 
 class Cannon:
@@ -131,10 +219,10 @@ class Ammunition:
             self.vx = -self.vx / 2
             self.vy = self.vy * 0.8
             self.x = self.r
-        if self.y + self.r > ground.y:
+        if self.y + self.r > GROUND_Y:
             self.vy = -self.vy / 2
             self.vx = self.vx * 0.8
-            self.y = ground.y - self.r
+            self.y = GROUND_Y - self.r
 
 
 class Bullet(Ammunition):
@@ -147,8 +235,8 @@ class Bullet(Ammunition):
                          self.v * cos(angle),
                          self.v * sin(angle))
 
-    def disappears(self):
-        return self.vx ** 2 + self.vy ** 2 < cannon.start_side / 12 and self.y > ground.y - 20 or \
+    def disappears(self, cannon):
+        return self.vx ** 2 + self.vy ** 2 < cannon.start_side / 12 and self.y > GROUND_Y - 20 or \
                self.y < - 0.3 * SCREEN_Y
 
 
@@ -157,7 +245,7 @@ class Bomb(Ammunition):
         super().__init__(BLACK, other.x, other.y, r, other.vx, other.vy)
 
     def disappears(self):
-        return self.y >= ground.y - self.r - self.vy
+        return self.y >= GROUND_Y - self.r - self.vy
 
 
 class Target:
@@ -201,7 +289,7 @@ class Target:
 
 class Butterfly(Target, Timer):
     def __init__(self):
-        Target.__init__(self, bottom=ground.y)
+        Target.__init__(self, bottom=GROUND_Y)
         Timer.__init__(self)
         self.r = ran(25, 35)
         self.v = self.r / 2
@@ -217,91 +305,9 @@ class Butterfly(Target, Timer):
         return dist_x < self.r + other.r and dist_y < self.r + other.r
 
 
-finished = False
-clock = pygame.time.Clock()
-
-score = 0
-bullet_type_1 = True
-ground = Ground()
-cannon = Cannon(40, y=ground.y)
-targets = [Target(ground.y) for i in range(2)]
-bullets = []
-bombs = []
-butterflies = [Butterfly()]
-while not finished:
-    clock.tick(FPS)
-    ground.draw()
-    cannon.move()
-    cannon.muzzle_move()
-    cannon.draw()
-    cannon.health_draw()
-    score_count()
-
-    butterfly_number = score // 5 + 1
-    if len(butterflies) < butterfly_number:
-        butterflies.append(Butterfly())
-
-    if cannon.is_dead():
-        finished = True
-    for bullet in bullets:
-        if bullet.disappears():
-            bullets.remove(bullet)
-        bullet.move()
-        bullet.draw()
-    for bomb in bombs:
-        if bomb.disappears():
-            bombs.remove(bomb)
-        bomb.move()
-        bomb.draw()
-    for bomb in bombs:
-        if cannon.is_touching(bomb):
-            cannon.health -= cannon.max_health / 5
-            bombs.remove(bomb)
-    for target in targets:
-        target.move()
-        target.draw()
-    for bullet in bullets:
-        for target in targets:
-            if target.is_touching(bullet):
-                targets.remove(target)
-                targets.append(Target(ground.y))
-                bullets.remove(bullet)
-                score += 1
-                if cannon.health_is_not_full():
-                    cannon.health += cannon.max_health / 50
-
-    for butterfly in butterflies:
-        butterfly.move()
-        butterfly.draw()
-        if butterfly.time_passed():
-            bombs.append(Bomb(butterfly, 10))
-            butterfly.waits()
-    for bullet in bullets:
-        for butterfly in butterflies:
-            if butterfly.is_touching(bullet):
-                butterflies.remove(butterfly)
-                butterflies.append(Butterfly())
-                try:
-                    bullets.remove(bullet)
-                except:
-                    print("Congratulations you hit two targets with one shot!!!")
-                score += 1
-                if cannon.health_is_not_full():
-                    cannon.health += 1
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            finished = True
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 3:
-            bullet_type_1 = not bullet_type_1
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            if bullet_type_1:
-                bullets.append(Bullet(cannon, cannon.width, cannon.angle))
-            else:
-                for delta_angle in range(-1, 2):
-                    bullets.append(Bullet(cannon, cannon.width / 3, cannon.angle + delta_angle / 35))
-
-    pygame.display.update()
-    screen.fill(WHITE)
-
-pygame.quit()
+if __name__ == "__main__":
+    try:
+        game = Game()
+        game.mainloop()
+    finally:
+        pygame.quit()
