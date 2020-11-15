@@ -21,7 +21,7 @@ class Game:
 
         self.score = 0
         self.cannon = Cannon(40, y=GROUND_Y)
-        self.targets = [Target(GROUND_Y) for i in range(2)]
+        self.targets = [Target(), Target()]
         self.bullets = []
         self.bombs = []
         self.butterflies = [Butterfly()]
@@ -34,6 +34,11 @@ class Game:
     def ground_draw(self):
         line(screen, BLACK, (0, GROUND_Y), (SCREEN_X, GROUND_Y), 3)
 
+    def add_butterfly(self):
+        butterfly_number = self.score // 8 + 1
+        if len(self.butterflies) < butterfly_number:
+            self.butterflies.append(Butterfly())
+
     def mainloop(self):
         finished = False
         bullet_type_1 = True
@@ -45,39 +50,26 @@ class Game:
             self.cannon.draw()
             self.cannon.health_draw()
             self.score_count()
-
-            butterfly_number = self.score // 5 + 1
-            if len(self.butterflies) < butterfly_number:
-                self.butterflies.append(Butterfly())
+            self.add_butterfly()
 
             if self.cannon.is_dead():
                 finished = True
+
+            for target in self.targets:
+                target.move()
+                target.draw()
+
             for bullet in self.bullets:
                 if bullet.disappears(self.cannon):
                     self.bullets.remove(bullet)
                 bullet.move()
                 bullet.draw()
+
             for bomb in self.bombs:
                 if bomb.disappears():
                     self.bombs.remove(bomb)
                 bomb.move()
                 bomb.draw()
-            for bomb in self.bombs:
-                if self.cannon.is_touching(bomb):
-                    self.cannon.health -= self.cannon.max_health / 5
-                    self.bombs.remove(bomb)
-            for target in self.targets:
-                target.move()
-                target.draw()
-            for bullet in self.bullets:
-                for target in self.targets:
-                    if target.is_touching(bullet):
-                        self.targets.remove(target)
-                        self.targets.append(Target(GROUND_Y))
-                        self.bullets.remove(bullet)
-                        self.score += 1
-                        if self.cannon.health_is_not_full():
-                            self.cannon.health += self.cannon.max_health / 50
 
             for butterfly in self.butterflies:
                 butterfly.move()
@@ -85,6 +77,25 @@ class Game:
                 if butterfly.time_passed():
                     self.bombs.append(Bomb(butterfly, 10))
                     butterfly.waits()
+
+            for bomb in self.bombs:
+                if self.cannon.is_touching(bomb):
+                    self.cannon.health -= self.cannon.max_health / 5
+                    self.bombs.remove(bomb)
+
+            for bullet in self.bullets:
+                for target in self.targets:
+                    if target.is_touching(bullet):
+                        self.targets.remove(target)
+                        self.targets.append(Target())
+                        try:
+                            self.bullets.remove(bullet)
+                        except ValueError:
+                            print("Congratulations you hit two butterflies with one shot!!!")
+                        self.score += 1
+                        if self.cannon.health_is_not_full():
+                            self.cannon.health += self.cannon.max_health / 50
+
             for bullet in self.bullets:
                 for butterfly in self.butterflies:
                     if butterfly.is_touching(bullet):
@@ -235,8 +246,8 @@ class Bullet(Ammunition):
                          self.v * cos(angle),
                          self.v * sin(angle))
 
-    def disappears(self, cannon):
-        return self.vx ** 2 + self.vy ** 2 < cannon.start_side / 12 and self.y > GROUND_Y - 20 or \
+    def disappears(self, other: Cannon):
+        return self.vx ** 2 + self.vy ** 2 < other.start_side / 12 and self.y > GROUND_Y - 20 or \
                self.y < - 0.3 * SCREEN_Y
 
 
@@ -249,7 +260,7 @@ class Bomb(Ammunition):
 
 
 class Target:
-    def __init__(self, bottom=SCREEN_Y, top=0, left=0, right=SCREEN_X):
+    def __init__(self, bottom=GROUND_Y, top=0, left=0, right=SCREEN_X):
         self.color = RED
         self.r = ran(20, 25)
         self.right = right
@@ -289,7 +300,7 @@ class Target:
 
 class Butterfly(Target, Timer):
     def __init__(self):
-        Target.__init__(self, bottom=GROUND_Y)
+        Target.__init__(self)
         Timer.__init__(self)
         self.r = ran(25, 35)
         self.v = self.r / 2
