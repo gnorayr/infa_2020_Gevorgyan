@@ -18,7 +18,7 @@ screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
 class Game:
     def __init__(self):
         self.clock = pygame.time.Clock()
-
+        self.font = pygame.font.SysFont('arial', 25, True)
         self.score = 0
         self.cannon = Cannon(40, y=GROUND_Y)
         self.targets = [Target(), Target()]
@@ -27,9 +27,24 @@ class Game:
         self.butterflies = [Butterfly()]
 
     def score_count(self):
-        font = pygame.font.SysFont('arial', 25, True)
-        text_1 = font.render("Score: {}".format(self.score), True, BLACK)
-        screen.blit(text_1, text_1.get_rect(center=(SCREEN_X // 25, SCREEN_Y // 50)))
+        text = self.font.render("Score: {}".format(self.score), True, BLACK)
+        screen.blit(text, text.get_rect(center=(SCREEN_X // 25, SCREEN_Y // 50)))
+
+    def rules(self):
+        text_1 = self.font.render("Avoid bombs that butterflies drop and gain HP by hitting targets and butterflies",
+                                  True, BLACK)
+        text_2 = self.font.render("left click (hold) - shoot", True, BLACK)
+        text_3 = self.font.render("right click - change type of bullet", True, BLACK)
+        text_4 = self.font.render("A or left key - move left", True, BLACK)
+        text_5 = self.font.render("D or right key - move right", True, BLACK)
+        text_6 = self.font.render("press any key to start the game", True, BLACK)
+
+        screen.blit(text_1, text_1.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 - 50)))
+        screen.blit(text_2, text_2.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 25)))
+        screen.blit(text_3, text_3.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 50)))
+        screen.blit(text_4, text_4.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 75)))
+        screen.blit(text_5, text_5.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 100)))
+        screen.blit(text_6, text_6.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 175)))
 
     def ground_draw(self):
         line(screen, BLACK, (0, GROUND_Y), (SCREEN_X, GROUND_Y), 3)
@@ -42,78 +57,84 @@ class Game:
     def mainloop(self):
         finished = False
         bullet_type_1 = True
+        button_not_pressed = True
         while not finished:
             self.clock.tick(FPS)
-            self.ground_draw()
-            self.cannon.move()
-            self.cannon.muzzle_move()
-            self.cannon.draw()
-            self.cannon.health_draw()
-            self.score_count()
-            self.add_butterfly()
+            if button_not_pressed:
+                self.rules()
+            else:
+                self.ground_draw()
+                self.cannon.move()
+                self.cannon.muzzle_move()
+                self.cannon.draw()
+                self.cannon.health_draw()
+                self.score_count()
+                self.add_butterfly()
 
-            if self.cannon.is_dead():
-                print("your score is", self.score)
-                finished = True
+                if self.cannon.is_dead():
+                    print("your score is", self.score)
+                    finished = True
 
-            for target in self.targets:
-                target.move()
-                target.draw()
-
-            for bullet in self.bullets:
-                if bullet.disappears(self.cannon):
-                    self.bullets.remove(bullet)
-                bullet.move()
-                bullet.draw()
-
-            for bomb in self.bombs:
-                if bomb.disappears():
-                    self.bombs.remove(bomb)
-                bomb.move()
-                bomb.draw()
-
-            for butterfly in self.butterflies:
-                butterfly.move()
-                butterfly.draw()
-                if butterfly.time_passed():
-                    self.bombs.append(Bomb(butterfly, 10))
-                    butterfly.waits()
-
-            for bomb in self.bombs:
-                if self.cannon.is_touching(bomb):
-                    self.cannon.health -= self.cannon.max_health / 5
-                    self.bombs.remove(bomb)
-
-            for bullet in self.bullets:
                 for target in self.targets:
-                    if target.is_touching(bullet):
-                        self.targets.remove(target)
-                        self.targets.append(Target())
-                        try:
-                            self.bullets.remove(bullet)
-                        except ValueError:
-                            print("Congratulations you hit two butterflies with one shot!!!")
-                        self.score += 1
-                        if self.cannon.health_is_not_full():
-                            self.cannon.health += self.cannon.max_health / 50
+                    target.move()
+                    target.draw()
 
-            for bullet in self.bullets:
+                for bullet in self.bullets:
+                    if bullet.disappears(self.cannon):
+                        self.bullets.remove(bullet)
+                    bullet.move()
+                    bullet.draw()
+
+                for bomb in self.bombs:
+                    if bomb.disappears():
+                        self.bombs.remove(bomb)
+                    bomb.move()
+                    bomb.draw()
+
                 for butterfly in self.butterflies:
-                    if butterfly.is_touching(bullet):
-                        self.butterflies.remove(butterfly)
-                        self.butterflies.append(Butterfly())
-                        try:
-                            self.bullets.remove(bullet)
-                        except ValueError:
-                            print("Congratulations you hit two butterflies with one shot!!!")
-                        self.score += 1
-                        if self.cannon.health_is_not_full():
-                            self.cannon.health += 1
+                    butterfly.move()
+                    butterfly.draw()
+                    if butterfly.time_passed():
+                        self.bombs.append(Bomb(butterfly, 10))
+                        butterfly.waits()
+
+                for bomb in self.bombs:
+                    if self.cannon.is_touching(bomb):
+                        self.cannon.health -= self.cannon.max_health / 5
+                        self.bombs.remove(bomb)
+
+                for bullet in self.bullets:
+                    for target in self.targets:
+                        if target.is_touching(bullet):
+                            self.targets.remove(target)
+                            self.targets.append(Target())
+                            try:
+                                self.bullets.remove(bullet)
+                            except ValueError:
+                                print("Congratulations you hit two butterflies with one shot!!!")
+                            self.score += 1
+                            if self.cannon.health_is_not_full():
+                                self.cannon.health += self.cannon.max_health / 50
+
+                for bullet in self.bullets:
+                    for butterfly in self.butterflies:
+                        if butterfly.is_touching(bullet):
+                            self.butterflies.remove(butterfly)
+                            self.butterflies.append(Butterfly())
+                            try:
+                                self.bullets.remove(bullet)
+                            except ValueError:
+                                print("Congratulations you hit two butterflies with one shot!!!")
+                            self.score += 1
+                            if self.cannon.health_is_not_full():
+                                self.cannon.health += 1
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     print("your score is", self.score)
                     finished = True
+                elif event.type == pygame.KEYDOWN:
+                    button_not_pressed = False
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 3:
                     bullet_type_1 = not bullet_type_1
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
@@ -168,10 +189,11 @@ class Cannon:
                                       self.y - 0.5 * self.width * cos(self.angle))])
 
     def health_draw(self):
-        rect(screen, RED, (150, 5, 1000, 20))
+        rect(screen, RED, (SCREEN_X // 8, SCREEN_Y // 120, 5 * SCREEN_X // 6, SCREEN_Y // 30))
         if self.health > 0:
-            rect(screen, GREEN, (150, 5, 1000 * self.health // self.max_health, 20))
-        rect(screen, BLACK, (150, 5, 1000, 20), 3)
+            rect(screen, GREEN,
+                 (SCREEN_X // 8, SCREEN_Y // 120, 5 * self.health * SCREEN_X // 6 // self.max_health, SCREEN_Y // 30))
+        rect(screen, BLACK, (SCREEN_X // 8, SCREEN_Y // 120, 5 * SCREEN_X // 6, SCREEN_Y // 30), 3)
 
     def muzzle_move(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
