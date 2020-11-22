@@ -21,7 +21,7 @@ class Game:
         self.font = pygame.font.SysFont('arial', 25, True)
         self.score = 0
         self.cannon = Cannon(40, y=GROUND_Y)
-        self.targets = [Target(), Target()]
+        self.targets = [Target()]
         self.bullets = []
         self.bombs = []
         self.butterflies = [Butterfly()]
@@ -50,9 +50,14 @@ class Game:
         line(screen, BLACK, (0, GROUND_Y), (SCREEN_X, GROUND_Y), 3)
 
     def add_butterfly(self):
-        butterfly_number = self.score // 8 + 1
+        butterfly_number = self.score // 5 + 1
         if len(self.butterflies) < butterfly_number:
             self.butterflies.append(Butterfly())
+
+    def add_target(self):
+        target_number = self.score // 10 + 1
+        if len(self.targets) < target_number:
+            self.targets.append(Target())
 
     def mainloop(self):
         finished = False
@@ -70,6 +75,7 @@ class Game:
                 self.cannon.health_draw()
                 self.score_count()
                 self.add_butterfly()
+                self.add_target()
 
                 if self.cannon.is_dead():
                     print("your score is", self.score)
