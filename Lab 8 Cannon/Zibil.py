@@ -9,7 +9,7 @@ from my_colors import *
 pygame.init()
 
 FPS = 60
-SCREEN_X, SCREEN_Y = 1200, 600
+SCREEN_X, SCREEN_Y = 1300, 600
 GROUND_Y = 19 * SCREEN_Y // 20
 
 screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
@@ -21,10 +21,10 @@ class Game:
         self.font = pygame.font.SysFont('arial', 25, True)
         self.score = 0
         self.cannon = Cannon(40, y=GROUND_Y)
-        self.targets = [Target()]
+        self.targets = [Target() for i in range(2)]
         self.bullets = []
         self.bombs = []
-        self.butterflies = [Butterfly()]
+        self.butterflies = [Butterfly() for i in range(2)]
 
     def score_count(self):
         text = self.font.render("Score: {}".format(self.score), True, BLACK)
@@ -37,7 +37,8 @@ class Game:
         text_3 = self.font.render("right click - change type of bullet", True, BLACK)
         text_4 = self.font.render("A or left key - move left", True, BLACK)
         text_5 = self.font.render("D or right key - move right", True, BLACK)
-        text_6 = self.font.render("press any key to start the game", True, BLACK)
+        text_6 = self.font.render("press any key(except ESC) to start the game", True, BLACK)
+        text_7 = self.font.render("press ESC to close the window", True, BLACK)
 
         screen.blit(text_1, text_1.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 - 50)))
         screen.blit(text_2, text_2.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 25)))
@@ -45,6 +46,7 @@ class Game:
         screen.blit(text_4, text_4.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 75)))
         screen.blit(text_5, text_5.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 100)))
         screen.blit(text_6, text_6.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 175)))
+        screen.blit(text_7, text_7.get_rect(center=(SCREEN_X // 2, SCREEN_Y // 4 + 200)))
 
     def ground_draw(self):
         line(screen, BLACK, (0, GROUND_Y), (SCREEN_X, GROUND_Y), 3)
@@ -55,7 +57,7 @@ class Game:
             self.butterflies.append(Butterfly())
 
     def add_target(self):
-        target_number = self.score // 10 + 1
+        target_number = self.score // 8 + 1
         if len(self.targets) < target_number:
             self.targets.append(Target())
 
@@ -74,7 +76,6 @@ class Game:
                 self.cannon.draw()
                 self.cannon.health_draw()
                 self.score_count()
-                self.add_butterfly()
                 self.add_target()
 
                 if self.cannon.is_dead():
@@ -141,6 +142,8 @@ class Game:
                     finished = True
                 elif event.type == pygame.KEYDOWN:
                     button_not_pressed = False
+                    if event.key == pygame.K_ESCAPE:
+                        finished = True
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 3:
                     bullet_type_1 = not bullet_type_1
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
@@ -169,6 +172,9 @@ class Timer:
 
 class Cannon:
     def __init__(self, start_side, y, x=SCREEN_X / 2, color=ARMY, width=9):
+        """
+        r: size
+        """""
         self.color = color
         self.start_side = start_side
         self.side = start_side
